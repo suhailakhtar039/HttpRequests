@@ -9,7 +9,7 @@ import { Post } from './post.model';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  loadedPosts = [];
+  loadedPosts: Post[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -20,7 +20,8 @@ export class AppComponent implements OnInit {
   onCreatePost(postData: Post) {
     // Send Http request
     this.http
-    .post("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", postData)
+    .post<{name:string}>
+    ("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", postData)
     .subscribe(responseData => {
       console.log(responseData)
     });
@@ -37,9 +38,9 @@ export class AppComponent implements OnInit {
 
   private fetchPosts(){
     this.http
-    .get("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json")
-    .pipe(map((responseData: {[key: string]:Post }) =>{
-      const postsArray = [];
+    .get<{[key: string]:Post}>("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json")
+    .pipe(map((responseData) =>{
+      const postsArray: Post[] = [];
       for(const key in responseData){
         if(responseData.hasOwnProperty(key)){
           postsArray.push({...responseData[key], id:key})
@@ -49,6 +50,7 @@ export class AppComponent implements OnInit {
     }))
     .subscribe(posts=>{
       console.log(posts)
+      this.loadedPosts = posts;
     })
   }
 }
