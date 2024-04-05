@@ -1,5 +1,5 @@
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { map, catchError } from 'rxjs/operators';
+import { HttpClient, HttpEventType, HttpHeaders, HttpParams } from "@angular/common/http";
+import { map, catchError, tap } from 'rxjs/operators';
 import { Injectable } from "@angular/core";
 import { Post } from "./post.model";
 import { Subject, throwError } from "rxjs";
@@ -15,7 +15,11 @@ export class PostsService {
 
 		this.http
 			.post<{ name: string }>
-			("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", postData)
+			("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", 
+			postData,
+			{
+				observe:'response'
+			})
 			.subscribe(responseData => {
 				console.log(responseData)
 			},
@@ -30,7 +34,8 @@ export class PostsService {
 		return this.http
 			.get<{ [key: string]: Post }>("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", {
 				headers: new HttpHeaders({'custom-header':'Hello'}),
-				params: searchParams
+				params: searchParams,
+				responseType: 'json'
 			})
 			.pipe(map((responseData) => {
 				const postsArray: Post[] = [];
@@ -47,6 +52,18 @@ export class PostsService {
 	}
 
 	deletePosts() {
-		return this.http.delete("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json");
+		return this.http
+		.delete("https://ng-recipe-guide-8b69c-default-rtdb.firebaseio.com/posts.json", {
+			observe:'events',
+			responseType:'text'
+		})
+		.pipe(
+			tap(event => {
+				console.log(event)
+				if(event.type === HttpEventType.Response){
+					console.log(event.body)
+				}
+			})
+		);
 	}
 }
